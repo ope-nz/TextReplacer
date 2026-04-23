@@ -12,27 +12,29 @@ namespace TextReplacer
             string TReplace = null; // null = not supplied, "" = explicitly empty (delete matches)
             string TOutput = "";
             string TInput = "";
+            bool TTrim = false;
 
-            int c = args.GetUpperBound(0);
-
-            for (int n = 0; n < c; n++)
+            for (int n = 0; n < args.Length; n++)
             {
                 string thisKey = args[n].ToLower();
-                string thisVal = args[n + 1].TrimEnd().TrimStart();
-
                 switch (thisKey)
                 {
+                    case "-trim":
+                        TTrim = true;
+                        break;
                     case "-find":
-                        TFind = thisVal;
-                        break;
                     case "-replace":
-                        TReplace = thisVal;
-                        break;
                     case "-output":
-                        TOutput = thisVal;
-                        break;
                     case "-input":
-                        TInput = thisVal;
+                        if (n + 1 >= args.Length) break;
+                        string thisVal = args[++n].Trim();
+                        switch (thisKey)
+                        {
+                            case "-find":    TFind    = thisVal; break;
+                            case "-replace": TReplace = thisVal; break;
+                            case "-output":  TOutput  = thisVal; break;
+                            case "-input":   TInput   = thisVal; break;
+                        }
                         break;
                 }
             }
@@ -83,9 +85,19 @@ namespace TextReplacer
 
             temp_text = temp_text.Replace(TFind, TReplace);
 
+            if (TTrim)
+            {
+                string[] lines = temp_text.Split('\n');
+                for (int i = 0; i < lines.Length; i++)
+                    lines[i] = lines[i].Trim();
+                temp_text = string.Join("\n", lines);
+            }
+
             File.WriteAllText(TOutput, temp_text, new UTF8Encoding(false));
 
-            Console.WriteLine("Done!");
+            string findPreview    = TFind.Length    > 10 ? TFind.Substring(0, 10)    + "..." : TFind;
+            string replacePreview = TReplace.Length > 10 ? TReplace.Substring(0, 10) + "..." : TReplace;
+            Console.WriteLine("Replaced " + findPreview + " with " + replacePreview);
         }
     }
 }
